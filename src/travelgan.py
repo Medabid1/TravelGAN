@@ -51,12 +51,18 @@ class TravelGan:
     
     def train(self, loaderA, loaderB):
         for i in tqdm(range(self.config['epochs'])):
+            self.gen.train()
             self._train_epoch(loaderA, loaderB)
             self.gen_scheduler.step()
             self.dis_scheduler.step()
 
             if i % self.config['checkpoint_iter'] :
                 self.save()
+
+    def sample(self, x_a):
+        self.gen.eval()
+        x_ab = self.gen(x_a)
+        return x_ab 
 
     def save(self): 
         torch.save({'gen' : self.gen.state_dict(),
