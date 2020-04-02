@@ -16,6 +16,7 @@ class ResidualBlock(nn.Module):
         layers.append(nn.Conv2d(num_feat, in_feat, kernel_size=3, padding=1, bias=False))
         layers.append(nn.InstanceNorm2d(in_feat, affine=True, track_running_stats=True))
         self.main = nn.Sequential(*layers)
+        self.is_attention = attention
         if attention :
             attentionlayer = [] 
             attentionlayer.append(nn.AdaptiveAvgPool2d(1))
@@ -27,7 +28,10 @@ class ResidualBlock(nn.Module):
 
     def forward(self, x):
         out = self.main(x)
-        x = x + out * self.attention(out)
+        if self.is_attention :
+            x = x + out * self.attention(out)
+        else :
+            x = x + out 
         return x
 
 
@@ -87,6 +91,17 @@ class Discriminator(nn.Module):
         h = self.main(x)
         out = self.conv1(h)
         return out
+
+    def calc_dis_loss(self, x_real, x_fake):
+        real_pred = self.forward(x_real)
+        fake_pred = self.forward(x_fake)
+        loss = torch.mean((real_pred - 1)**2) + torch.mean((fake_pred - 0)**2)
+        return loss
+    
+    def calc_gen_loss(self, x):
+        pred = self.forward(x)
+        loss = torch.mean((pred - 1)**2)
+        return loss 
 
 class SiameseNet(nn.Module):
     def __init__(self, image_size, in_channels, num_feat=64, num_repeat=5, gamma=10):
