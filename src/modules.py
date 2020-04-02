@@ -1,8 +1,10 @@
 import torch 
-import torch.nn as nn 
+import torch.nn as nn
+import torch.nn.functional as F 
+import numpy as np
 
 from collections import OrderedDict
-
+from itertools import combinations
 
 class ResidualBlock(nn.Module):
     def __init__(self, in_feat, num_feat, reduction=16, attention=True):
@@ -66,14 +68,14 @@ class Generator(nn.Module):
 
 class Discriminator(nn.Module):
     """Discriminator network with PatchGAN."""
-    def __init__(self, num_feat=64, repeat_num=6):
+    def __init__(self, in_channels, num_feat=64, num_repeat=6):
         super().__init__()
         layers = []
-        layers.append(nn.Conv2d(3, num_feat, kernel_size=4, stride=2, padding=1))
+        layers.append(nn.Conv2d(in_channels, num_feat, kernel_size=4, stride=2, padding=1))
         layers.append(nn.LeakyReLU(0.01))
 
         curr_dim = num_feat
-        for _ in range(1, repeat_num):
+        for _ in range(1, num_repeat):
             layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1))
             layers.append(nn.LeakyReLU(0.01))
             curr_dim = curr_dim * 2
@@ -85,3 +87,40 @@ class Discriminator(nn.Module):
         h = self.main(x)
         out = self.conv1(h)
         return out
+
+class SiameseNet(nn.Module):
+    def __init__(self, image_size, in_channels, num_feat=64, num_repeat=5, gamma=10):
+        super().__init__()
+        layers = []
+        self.gamma = gamma 
+        layers.append(nn.Conv2d(in_channels, num_feat, kernel_size=4, stride=2, padding=1))
+        layers.append(nn.LeakyReLU(0.01))
+
+        curr_dim = num_feat
+        for _ in range(1, num_repeat):
+            layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1))
+            layers.append(nn.LeakyReLU(0.01))
+            curr_dim = curr_dim * 2
+
+        in_feat = image_size // 2**(num_repeat)
+
+        self.main = nn.Sequential(*layers)
+        self.linear = nn.Linear(in_feat**2, 1024)
+
+    def _forward(self, x1, x2):
+        latent1 = self.main(x1)
+        latent2 = self.main(x2)
+        latent1 = self.linear(latent1.flatten(1))
+        latent2 = self.linear(latent2.flatten(1))
+        return latent1, latent2
+        
+    def calc_loss(self, x1, x2):
+        pairs = np.asarray(list(combinations(list(range(x1.size(0))), 2)))
+        latent1, latent2 = self._forward(x1, x2)
+        v1 = latent1[pairs[:,0]] - latent1[pairs[:,1]]
+        v2 = latent2[pairs[:,0]] - latent2[pairs[:,1]]
+        distance = F.mse_loss(v1, v2) - F.cosine_similarity(v1, v2) 
+        return distance + self.margin_loss(v1)
+
+    def margin_loss(self, v1):
+        return F.relu(self.gamma - torch.norm(v1))
