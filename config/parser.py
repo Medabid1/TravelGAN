@@ -23,7 +23,9 @@ class parser:
         
         model = self.config['MODEL']
         c['device'] = model['device']
+        c['enable_wandb'] = model.getboolean('enable_wandb')
         c['checkpoint_path'] = model['checkpoint_path']
+        c['checkpoint_iter'] = model['checkpoint_iter']
         c['image_size'] = model.getint('image_size')
         c['in_channels'] = model.getint('in_channels')
         c['num_feat'] = model.getint('num_feat')
