@@ -30,9 +30,9 @@ class TravelGan:
         self.dis_scheduler = optim.lr_scheduler.StepLR(self.opt_dis, config['step_size'], gamma=0.1)
 
     
-    def _train_epoch(self, loaderA, loaderB):
-        
+    def _train_epoch(self, loaderA, loaderB, epoch):
         for i, (x_a, x_b) in enumerate(zip(loaderA, loaderB)):
+            global_step = len(loaderB) * epoch + i
             
             if isinstance(x_a, (tuple, list)):
                 x_a = x_a[0]
@@ -51,8 +51,8 @@ class TravelGan:
             dis_loss.backward()
             self.opt_dis.step()
             
-            if i % self.config['iter_log']:
-                self.logger.add_scalar('dis_loss', dis_loss.item(), i)
+            if global_step  % self.config['iter_log']:
+                self.logger.add_scalar('dis_loss', dis_loss.item(), global_step)
 
             #===============================
             # Gen Update 
@@ -68,27 +68,29 @@ class TravelGan:
             self.opt_gen.step()
             
             if i % self.config['iter_log']:
-                self.logger.add_scalar('gen_loss', gen_loss.item(), i)
-                self.logger.add_scalar('gen_adv_loss', gen_adv_loss.item(), i)
-                self.logger.add_scalar('siamese_loss', gen_siamese_loss.item(), i)
-                
+                self.logger.add_scalar('gen_loss', gen_loss.item(), global_step)
+                self.logger.add_scalar('gen_adv_loss', gen_adv_loss.item(), global_step)
+                self.logger.add_scalar('siamese_loss', gen_siamese_loss.item(), global_step)
+            
+            
+            
     
     def train(self, loaderA, loaderB):
         for i in tqdm(range(self.config['epochs'])):
             self.gen.train()
-            self._train_epoch(loaderA, loaderB)
+            self._train_epoch(loaderA, loaderB, i)
             self.gen_scheduler.step()
             self.dis_scheduler.step()
 
             if i % self.config['checkpoint_iter'] :
-                self.save()
+                self.save(i)
 
     def sample(self, x_a, step):
         self.gen.eval()
         x_ab = self.gen(x_a)
         self.logger.add_image('sampled images', x_ab, step)
 
-    def save(self): 
+    def save(self, iter): 
         torch.save({'gen' : self.gen.state_dict(),
                     'dis' : self.dis.state_dict(),
                     'siamese' : self.siamese.state_dict(),
@@ -96,8 +98,8 @@ class TravelGan:
                     'dis_opt' : self.opt_dis.state_dict(),
                     'gen_scheduler' : self.gen_scheduler.state_dict(),
                     'dis_scheduler' : self.dis_scheduler.state_dict()
-        }, self.config['checkpoint_path'])
-
+        }, self.config['checkpoint_path'] + str(iter) + '.pt')
+        
     def load(self):
         checkpoint = torch.load(self.config['checkpoint_path'])
         self.gen.load_state_dict(checkpoint['gen'])
