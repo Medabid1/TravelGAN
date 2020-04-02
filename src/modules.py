@@ -120,7 +120,7 @@ class SiameseNet(nn.Module):
         in_feat = image_size // 2**(num_repeat)
 
         self.main = nn.Sequential(*layers)
-        self.linear = nn.Linear(in_feat**2, 1024)
+        self.linear = nn.Linear(curr_dim*in_feat**2, 1024)
 
     def _forward(self, x1, x2):
         latent1 = self.main(x1)
@@ -134,8 +134,8 @@ class SiameseNet(nn.Module):
         latent1, latent2 = self._forward(x1, x2)
         v1 = latent1[pairs[:,0]] - latent1[pairs[:,1]]
         v2 = latent2[pairs[:,0]] - latent2[pairs[:,1]]
-        distance = F.mse_loss(v1, v2) - F.cosine_similarity(v1, v2) 
+        distance = F.mse_loss(v1, v2) - torch.mean(F.cosine_similarity(v1, v2)) 
         return distance + self.margin_loss(v1)
 
     def margin_loss(self, v1):
-        return F.relu(self.gamma - torch.norm(v1))
+        return F.relu(self.gamma - torch.sum(v1.pow(2)))

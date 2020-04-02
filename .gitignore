@@ -130,3 +130,5 @@ dmypy.json
 .vscode/
 wandb/
 data/
+logs/checkpoints/
+logs/logfiles/

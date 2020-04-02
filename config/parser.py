@@ -19,12 +19,12 @@ class parser:
         c['batch_size'] = opt.getint('batch_size')
         c['epochs'] = opt.getint('epochs')
         c['step_size'] = opt.getint('step_size')
-        c['gamma'] = opt.getfloat('gamma')
         
         model = self.config['MODEL']
         c['iter_log'] = model.getint('iter_log')
         c['device'] = model['device']
         c['enable_wandb'] = model.getboolean('enable_wandb')
+        c['logfile'] = model['logfile']
         c['checkpoint_path'] = model['checkpoint_path']
         c['checkpoint_iter'] = model['checkpoint_iter']
         c['image_size'] = model.getint('image_size')
@@ -36,5 +36,6 @@ class parser:
         loss = self.config['LOSS']
         c['gen_adv_loss_w'] = loss.getint('gen_adv_loss_w')
         c['siamese_loss_w'] = loss.getint('siamese_loss_w')
+        c['gamma'] = loss.getfloat('gamma')
 
         return c

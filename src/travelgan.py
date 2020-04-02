@@ -2,11 +2,12 @@ import torch
 import torch.nn as nn 
 import torch.nn.functional as F 
 import torch.optim as optim 
+import wandb 
 
 from src.modules import Generator, Discriminator, SiameseNet
 from tqdm import tqdm
 
-
+wandb.init('TravelGan', name='cifar10')
 
 class TravelGan:
     def __init__(self, config, logger):
@@ -17,13 +18,16 @@ class TravelGan:
         self.gen = Generator(config['in_channels'], num_feat=config['num_feat'], num_res=config['num_res']).to(self.device)
         self.siamese = SiameseNet(config['image_size'], config['in_channels'], num_feat=config['num_feat'], 
                                   num_repeat=config['num_repeat'], gamma=config['gamma']).to(self.device)
-        
+        wandb.watch([self.gen, self.dis, self.siamese], log='all')
+
+        #optimizer
         gen_params = list(self.gen.parameters()) + list(self.siamese.parameters())
         self.opt_gen = optim.Adam(gen_params, lr=config['gen_lr'], betas=(config['gbeta1'], config['gbeta2']))
         self.opt_dis = optim.Adam(self.dis.parameters(), lr=config['dis_lr'], betas=(config['dbeta1'], config['dbeta2']))
 
-        self.gen_scheduler = optim.lr_scheduler.StepLR(self.opt_gen, config['gen_sch_step_size'], gamma=0.1)
-        self.dis_scheduler = optim.lr_scheduler.StepLR(self.opt_dis, config['dis_sch_step_size'], gamma=0.1)
+        # scheduler 
+        self.gen_scheduler = optim.lr_scheduler.StepLR(self.opt_gen, config['step_size'], gamma=0.1)
+        self.dis_scheduler = optim.lr_scheduler.StepLR(self.opt_dis, config['step_size'], gamma=0.1)
 
     
     def _train_epoch(self, loaderA, loaderB):

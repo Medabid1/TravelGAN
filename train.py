@@ -41,4 +41,4 @@ plane_loader = Data.DataLoader(data, batch_size=config['batch_size'], sampler = 
 
 model = TravelGan(config, logger)
 
-model.train()
+model.train(bird_loader, plane_loader)
