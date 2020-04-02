@@ -36,15 +36,15 @@ class ResidualBlock(nn.Module):
 
 
 class Generator(nn.Module):
-    def __init__(self, in_channels, init_feat, num_res):
+    def __init__(self, in_channels, num_feat, num_res):
         super().__init__()
 
         layers = []
-        layers.append(nn.Conv2d(in_channels, init_feat, kernel_size=7, stride=1, padding=3, bias=False))
-        layers.append(nn.InstanceNorm2d(init_feat, affine=True, track_running_stats=True))
+        layers.append(nn.Conv2d(in_channels, num_feat, kernel_size=7, stride=1, padding=3, bias=False))
+        layers.append(nn.InstanceNorm2d(num_feat, affine=True, track_running_stats=True))
         layers.append(nn.ReLU())
 
-        curr_dim = init_feat
+        curr_dim = num_feat
         for _ in range(2):
             layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1, bias=False))
             layers.append(nn.InstanceNorm2d(curr_dim*2, affine=True, track_running_stats=True))
