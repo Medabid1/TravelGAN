@@ -22,6 +22,7 @@ class parser:
         c['gamma'] = opt.getfloat('gamma')
         
         model = self.config['MODEL']
+        c['iter_log'] = model.getint('iter_log')
         c['device'] = model['device']
         c['enable_wandb'] = model.getboolean('enable_wandb')
         c['checkpoint_path'] = model['checkpoint_path']

@@ -39,6 +39,6 @@ plane_idx = get_indices(data, 0)
 bird_loader = Data.DataLoader(data, batch_size=config['batch_size'], sampler = Data.sampler.SubsetRandomSampler(bird_idx))
 plane_loader = Data.DataLoader(data, batch_size=config['batch_size'], sampler = Data.sampler.SubsetRandomSampler(plane_idx))
 
-model = TravelGan(config, logger )
+model = TravelGan(config, logger)
 
 model.train()

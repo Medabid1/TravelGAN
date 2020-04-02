@@ -9,12 +9,14 @@ from tqdm import tqdm
 
 
 class TravelGan:
-    def __init__(self, config):
+    def __init__(self, config, logger):
+        self.logger = logger 
         self.config = config 
-        self.dis = Discriminator(config['in_channels'], num_feat=config['num_feat'], num_repeat=config['num_repeat'])
-        self.gen = Generator(config['in_channels'], num_feat=config['num_feat'], num_res=config['num_res'])
+        self.device = self.config['device']
+        self.dis = Discriminator(config['in_channels'], num_feat=config['num_feat'], num_repeat=config['num_repeat']).to(self.device)
+        self.gen = Generator(config['in_channels'], num_feat=config['num_feat'], num_res=config['num_res']).to(self.device)
         self.siamese = SiameseNet(config['image_size'], config['in_channels'], num_feat=config['num_feat'], 
-                                  num_repeat=config['num_repeat'], gamma=config['gamma'])
+                                  num_repeat=config['num_repeat'], gamma=config['gamma']).to(self.device)
         
         gen_params = list(self.gen.parameters()) + list(self.siamese.parameters())
         self.opt_gen = optim.Adam(gen_params, lr=config['gen_lr'], betas=(config['gbeta1'], config['gbeta2']))
@@ -26,19 +28,31 @@ class TravelGan:
     
     def _train_epoch(self, loaderA, loaderB):
         
-        for _, (x_a, x_b) in enumerate(zip(loaderA, loaderB)):
+        for i, (x_a, x_b) in enumerate(zip(loaderA, loaderB)):
             
             if isinstance(x_a, (tuple, list)):
                 x_a = x_a[0]
             if isinstance(x_b, (tuple, list)):
                 x_b = x_b[0]
 
+            x_a = x_a.to(self.device)
+            x_b = x_b.to(self.device)
+            
+            #===============================
+            # Dis Update 
+            #===============================
             self.opt_dis.zero_grad()
             x_ab = self.gen(x_a)
             dis_loss = self.dis.calc_dis_loss(x_b, x_ab.detach())
             dis_loss.backward()
             self.opt_dis.step()
+            
+            if i % self.config['iter_log']:
+                self.logger.add_scalar('dis_loss', dis_loss.item(), i)
 
+            #===============================
+            # Gen Update 
+            #===============================
             self.opt_gen.zero_grad()
             gen_adv_loss = self.dis.calc_gen_loss(x_ab)
             gen_siamese_loss = self.siamese.calc_loss(x_a, x_ab)
@@ -48,6 +62,12 @@ class TravelGan:
             
             gen_loss.backward()
             self.opt_gen.step()
+            
+            if i % self.config['iter_log']:
+                self.logger.add_scalar('gen_loss', gen_loss.item(), i)
+                self.logger.add_scalar('gen_adv_loss', gen_adv_loss.item(), i)
+                self.logger.add_scalar('siamese_loss', gen_siamese_loss.item(), i)
+                
     
     def train(self, loaderA, loaderB):
         for i in tqdm(range(self.config['epochs'])):
@@ -59,10 +79,10 @@ class TravelGan:
             if i % self.config['checkpoint_iter'] :
                 self.save()
 
-    def sample(self, x_a):
+    def sample(self, x_a, step):
         self.gen.eval()
         x_ab = self.gen(x_a)
-        return x_ab 
+        self.logger.add_image('sampled images', x_ab, step)
 
     def save(self): 
         torch.save({'gen' : self.gen.state_dict(),
