@@ -22,6 +22,8 @@ class parser:
         c['gamma'] = opt.getfloat('gamma')
         
         model = self.config['MODEL']
+        c['device'] = model['device']
+        c['checkpoint_path'] = model['checkpoint_path']
         c['image_size'] = model.getint('image_size')
         c['in_channels'] = model.getint('in_channels')
         c['num_feat'] = model.getint('num_feat')

@@ -1,11 +1,7 @@
 
 import torch
+import torch.nn as nn 
 import torch.nn.functional as F 
+from torch.utils.data import DataLoader, Dataset
 
-from itertools import combinations
-import numpy as np 
-
-pairs = np.asarray(list(combinations(list(range(10)), 2)))
-print(pairs)
-print(pairs[:,0] )
-print(pairs[:, 1])
+from torchvision.datasets import CIFAR10
