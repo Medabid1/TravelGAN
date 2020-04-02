@@ -21,6 +21,7 @@ class parser:
         c['step_size'] = opt.getint('step_size')
         
         model = self.config['MODEL']
+        c['iter_sample'] = model.getint('iter_sample')
         c['iter_log'] = model.getint('iter_log')
         c['device'] = model['device']
         c['enable_wandb'] = model.getboolean('enable_wandb')

@@ -67,11 +67,13 @@ class TravelGan:
             gen_loss.backward()
             self.opt_gen.step()
             
-            if i % self.config['iter_log']:
+            if global_step % self.config['iter_log']:
                 self.logger.add_scalar('gen_loss', gen_loss.item(), global_step)
                 self.logger.add_scalar('gen_adv_loss', gen_adv_loss.item(), global_step)
                 self.logger.add_scalar('siamese_loss', gen_siamese_loss.item(), global_step)
             
+            if global_step % self.config['iter_sample']:
+                self.sample(x_a, global_step)
             
             
     
@@ -81,13 +83,14 @@ class TravelGan:
             self._train_epoch(loaderA, loaderB, i)
             self.gen_scheduler.step()
             self.dis_scheduler.step()
-
+            
             if i % self.config['checkpoint_iter'] :
                 self.save(i)
 
     def sample(self, x_a, step):
         self.gen.eval()
         x_ab = self.gen(x_a)
+        self.logger.add_image('real images', x_a, step)
         self.logger.add_image('sampled images', x_ab, step)
 
     def save(self, iter): 
