@@ -7,7 +7,7 @@ import wandb
 from src.modules import Generator, Discriminator, SiameseNet
 from tqdm import tqdm
 
-wandb.init('TravelGan', name='cifar10')
+wandb.init('TravelGan', name='mitis')
 
 class TravelGan:
     def __init__(self, config, logger):
@@ -51,7 +51,7 @@ class TravelGan:
             dis_loss.backward()
             self.opt_dis.step()
             
-            if global_step  % self.config['iter_log']:
+            if global_step  % self.config['iter_log'] == 0:
                 self.logger.add_scalar('dis_loss', dis_loss.item(), global_step)
 
             #===============================
@@ -67,12 +67,12 @@ class TravelGan:
             gen_loss.backward()
             self.opt_gen.step()
             
-            if global_step % self.config['iter_log']:
+            if global_step % self.config['iter_log'] == 0 :
                 self.logger.add_scalar('gen_loss', gen_loss.item(), global_step)
                 self.logger.add_scalar('gen_adv_loss', gen_adv_loss.item(), global_step)
                 self.logger.add_scalar('siamese_loss', gen_siamese_loss.item(), global_step)
             
-            if global_step % self.config['iter_sample']:
+            if global_step % self.config['iter_sample'] == 0:
                 self.sample(x_a, global_step)
             
             
@@ -84,7 +84,7 @@ class TravelGan:
             self.gen_scheduler.step()
             self.dis_scheduler.step()
             
-            if i % self.config['checkpoint_iter'] :
+            if i % self.config['checkpoint_iter'] == 0:
                 self.save(i)
 
     def sample(self, x_a, step):
