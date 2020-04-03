@@ -27,7 +27,7 @@ class parser:
         c['enable_wandb'] = model.getboolean('enable_wandb')
         c['logfile'] = model['logfile']
         c['checkpoint_path'] = model['checkpoint_path']
-        c['checkpoint_iter'] = model.getint['checkpoint_iter']
+        c['checkpoint_iter'] = model.getint('checkpoint_iter')
         c['image_size'] = model.getint('image_size')
         c['in_channels'] = model.getint('in_channels')
         c['num_feat'] = model.getint('num_feat')

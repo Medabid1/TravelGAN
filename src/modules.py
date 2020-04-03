@@ -3,6 +3,7 @@ import torch.nn as nn
 import torch.nn.functional as F 
 import numpy as np
 
+from utils import weights_init
 from collections import OrderedDict
 from itertools import combinations
 
@@ -41,13 +42,13 @@ class Generator(nn.Module):
 
         layers = []
         layers.append(nn.Conv2d(in_channels, num_feat, kernel_size=7, stride=1, padding=3, bias=False))
-        layers.append(nn.InstanceNorm2d(num_feat, affine=True, track_running_stats=True))
+        layers.append(nn.BatchNorm2d(num_feat))
         layers.append(nn.ReLU())
 
         curr_dim = num_feat
         for _ in range(2):
             layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1, bias=False))
-            layers.append(nn.InstanceNorm2d(curr_dim*2, affine=True, track_running_stats=True))
+            layers.append(nn.BatchNorm2d(curr_dim*2))
             layers.append(nn.ReLU(inplace=True))
             curr_dim = curr_dim * 2
 
@@ -58,13 +59,14 @@ class Generator(nn.Module):
 
         for _ in range(2):
             layers.append(nn.ConvTranspose2d(curr_dim, curr_dim//2, kernel_size=4, stride=2, padding=1, bias=False))
-            layers.append(nn.InstanceNorm2d(curr_dim//2, affine=True, track_running_stats=True))
+            layers.append(nn.BatchNorm2d(curr_dim//2))
             layers.append(nn.ReLU(inplace=True))
             curr_dim = curr_dim // 2
 
         layers.append(nn.Conv2d(curr_dim, in_channels, kernel_size=7, stride=1, padding=3, bias=False))
         layers.append(nn.Tanh())
         self.main = nn.Sequential(*layers)
+        self.apply(weights_init())
 
     def forward(self, x):
         return self.main(x)
@@ -85,7 +87,8 @@ class Discriminator(nn.Module):
             curr_dim = curr_dim * 2
 
         self.main = nn.Sequential(*layers)
-        self.conv1 = nn.Conv2d(curr_dim, 1, kernel_size=3, stride=1, padding=1, bias=False)
+        self.conv1 = nn.Conv2d(curr_dim, 1, kernel_size=3, stride=1, padding=1)
+        self.apply(weights_init())
 
     def forward(self, x):
         h = self.main(x)
@@ -121,6 +124,7 @@ class SiameseNet(nn.Module):
 
         self.main = nn.Sequential(*layers)
         self.linear = nn.Linear(curr_dim*in_feat**2, 1024)
+        self.apply(weights_init())
 
     def _forward(self, x1, x2):
         latent1 = self.main(x1)
@@ -138,4 +142,4 @@ class SiameseNet(nn.Module):
         return distance + self.margin_loss(v1)
 
     def margin_loss(self, v1):
-        return F.relu(self.gamma - torch.sum(v1.pow(2)))
+        return F.relu(torch.mean(self.gamma - torch.norm(v1, dim=1))

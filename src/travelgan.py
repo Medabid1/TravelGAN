@@ -7,7 +7,8 @@ import wandb
 from src.modules import Generator, Discriminator, SiameseNet
 from tqdm import tqdm
 
-wandb.init('TravelGan', name='mitis')
+
+wandb.init('TravelGan', name='noInstanceNorm')
 
 class TravelGan:
     def __init__(self, config, logger):
@@ -19,12 +20,12 @@ class TravelGan:
         self.siamese = SiameseNet(config['image_size'], config['in_channels'], num_feat=config['num_feat'], 
                                   num_repeat=config['num_repeat'], gamma=config['gamma']).to(self.device)
         wandb.watch([self.gen, self.dis, self.siamese], log='all')
-
+        
         #optimizer
         gen_params = list(self.gen.parameters()) + list(self.siamese.parameters())
         self.opt_gen = optim.Adam(gen_params, lr=config['gen_lr'], betas=(config['gbeta1'], config['gbeta2']))
         self.opt_dis = optim.Adam(self.dis.parameters(), lr=config['dis_lr'], betas=(config['dbeta1'], config['dbeta2']))
-
+        
         # scheduler 
         self.gen_scheduler = optim.lr_scheduler.StepLR(self.opt_gen, config['step_size'], gamma=0.1)
         self.dis_scheduler = optim.lr_scheduler.StepLR(self.opt_dis, config['step_size'], gamma=0.1)
@@ -38,7 +39,7 @@ class TravelGan:
                 x_a = x_a[0]
             if isinstance(x_b, (tuple, list)):
                 x_b = x_b[0]
-
+            
             x_a = x_a.to(self.device)
             x_b = x_b.to(self.device)
             
@@ -84,7 +85,7 @@ class TravelGan:
             self.gen_scheduler.step()
             self.dis_scheduler.step()
             
-            if i % self.config['checkpoint_iter'] == 0:
+            if i + 1 % self.config['checkpoint_iter'] == 0:
                 self.save(i)
 
     def sample(self, x_a, step):
