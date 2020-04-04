@@ -17,15 +17,11 @@ parser = parser('config/config.ini')
 config = parser.to_dict()
 logger = Logger(config['logfile'], config['enable_wandb'])
 
+source_path = 'data/vangogh2photo/real'
+target_path = 'data/vangogh2photo/vangogh'
 
-
-
-
-source_path = '/gel/usr/maabi11/data/data/vangogh2photo/trainB'
-target_path = '/gel/usr/maabi11/data/data/vangogh2photo/trainA'
-
-pic_loader = get_DataLoader_fromFolder(source_path)
-monet_loader = get_DataLoader_fromFolder(target_path)
+pic_loader = get_DataLoader_fromFolder(source_path, config['batch_size'])
+monet_loader = get_DataLoader_fromFolder(target_path, config['batch_size'])
 
 model = TravelGan(config, logger)
 

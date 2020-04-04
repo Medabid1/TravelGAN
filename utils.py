@@ -1,16 +1,18 @@
+import torch
 import torch.nn.init as init
-from torchvision import ImageFolder 
+import torchvision
+from torchvision.datasets import ImageFolder 
 
 def get_DataLoader_fromFolder(path, batch_size, transform=None):
     
-    train_dataset = torchvision.datasets.ImageFolder(
+    train_dataset = ImageFolder(
         root=path,
         transform=torchvision.transforms.ToTensor()
     )
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
-        batch_size=64,
-        num_workers=0,
+        batch_size=batch_size,
+        num_workers=4,
         shuffle=True
     )
     return train_loader
@@ -40,7 +42,7 @@ def cifar10_class_loader(class1, class2, transform, batch_size):
     truck = 9
     return two dataloader, class1 and class2 dataloaders.
     """
-    assert class1 =! class2, 'the two classes should be different'
+    assert class1 != class2, 'the two classes should be different'
 
     data = CIFAR10('data/', download=True, transform=transform)
     class1_idx = get_indices(data, class1)
