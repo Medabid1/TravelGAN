@@ -78,12 +78,12 @@ class Discriminator(nn.Module):
         super().__init__()
         layers = []
         layers.append(nn.Conv2d(in_channels, num_feat, kernel_size=4, stride=2, padding=1))
-        layers.append(nn.LeakyReLU(0.01))
+        layers.append(nn.LeakyReLU(0.2))
 
         curr_dim = num_feat
         for _ in range(1, num_repeat):
             layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1))
-            layers.append(nn.LeakyReLU(0.01))
+            layers.append(nn.LeakyReLU(0.2))
             curr_dim = curr_dim * 2
 
         self.main = nn.Sequential(*layers)
@@ -112,12 +112,12 @@ class SiameseNet(nn.Module):
         layers = []
         self.gamma = gamma 
         layers.append(nn.Conv2d(in_channels, num_feat, kernel_size=4, stride=2, padding=1))
-        layers.append(nn.LeakyReLU(0.01))
+        layers.append(nn.LeakyReLU(0.2))
 
         curr_dim = num_feat
         for _ in range(1, num_repeat):
             layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1))
-            layers.append(nn.LeakyReLU(0.01))
+            layers.append(nn.LeakyReLU(0.2))
             curr_dim = curr_dim * 2
 
         in_feat = image_size // 2**(num_repeat)
@@ -138,8 +138,9 @@ class SiameseNet(nn.Module):
         latent1, latent2 = self._forward(x1, x2)
         v1 = latent1[pairs[:,0]] - latent1[pairs[:,1]]
         v2 = latent2[pairs[:,0]] - latent2[pairs[:,1]]
-        distance = F.mse_loss(v1, v2) - torch.mean(F.cosine_similarity(v1, v2)) 
-        return distance + self.margin_loss(v1)
+        distance = F.mse_loss(v1, v2) - torch.mean(F.cosine_similarity(v1, v2))
+        margin = self.margin_loss(v1)
+        return distance + margin
 
     def margin_loss(self, v1):
-        return F.relu(torch.mean(self.gamma - torch.norm(v1, dim=1))
+        return torch.mean(F.relu(10 - torch.norm(v1, dim=1)))

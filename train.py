@@ -30,14 +30,14 @@ logger = Logger(config['logfile'], config['enable_wandb'])
     truck = 9
 """
 
-
-data = CIFAR10('data/', download=True, transform=transforms.Compose([transforms.ToTensor(),
-                                                                     transforms.Normalize((0.5, 0.5, 0.5), (1., 1., 1.))]))
-bird_idx = get_indices(data, 2)
-plane_idx = get_indices(data, 0)
-
-bird_loader = Data.DataLoader(data, batch_size=config['batch_size'], sampler = Data.sampler.SubsetRandomSampler(bird_idx))
-plane_loader = Data.DataLoader(data, batch_size=config['batch_size'], sampler = Data.sampler.SubsetRandomSampler(plane_idx))
+#======= 
+# Cifar 10 
+#data = CIFAR10('data/', download=True, transform=transforms.Compose([transforms.ToTensor(),
+#                                                                     transforms.Normalize((0.5, 0.5, 0.5), (1., 1., 1.))]))
+#bird_idx = get_indices(data, 2)
+#plane_idx = get_indices(data, 0)
+#bird_loader = Data.DataLoader(data, batch_size=config['batch_size'], sampler = Data.sampler.SubsetRandomSampler(bird_idx))
+#plane_loader = Data.DataLoader(data, batch_size=config['batch_size'], sampler = Data.sampler.SubsetRandomSampler(plane_idx))
 
 model = TravelGan(config, logger)
 

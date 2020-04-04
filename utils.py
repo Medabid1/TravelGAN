@@ -1,4 +1,6 @@
 import torch.nn.init as init
+from torchvision import ImageFolder 
+
 
 
 def get_indices(dataset,class_name):
@@ -12,6 +14,29 @@ def get_indices(dataset,class_name):
             indices.append(i)
     return indices
 
+def cifar10_class_loader(class1, class2, transform, batch_size):
+    """ 
+    planes = 0
+    cars = 1
+    bird = 2
+    cat = 3										
+    deer = 4										
+    dog = 5									
+    frog = 6										
+    horse = 7 										
+    ship = 8 										
+    truck = 9
+    return two dataloader, class1 and class2 dataloaders.
+    """
+    assert class1 =! class2, 'the two classes should be different'
+
+    data = CIFAR10('data/', download=True, transform=transform)
+    class1_idx = get_indices(data, class1)
+    class2_idx = get_indices(data, class2)
+    class1_loader = Data.DataLoader(data, batch_size=batch_size, sampler = Data.sampler.SubsetRandomSampler(bird_idx))
+    class2_loader = Data.DataLoader(data, batch_size=batch_size, sampler = Data.sampler.SubsetRandomSampler(plane_idx))
+
+    return class1_loader, class2_loader
 
 def weights_init(init_type='kaiming'):
     def init_fun(m):

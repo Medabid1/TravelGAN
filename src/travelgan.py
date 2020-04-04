@@ -85,7 +85,7 @@ class TravelGan:
             self.gen_scheduler.step()
             self.dis_scheduler.step()
             
-            if i + 1 % self.config['checkpoint_iter'] == 0:
+            if i % self.config['checkpoint_iter'] == 0:
                 self.save(i)
 
     def sample(self, x_a, step):
@@ -102,7 +102,7 @@ class TravelGan:
                     'dis_opt' : self.opt_dis.state_dict(),
                     'gen_scheduler' : self.gen_scheduler.state_dict(),
                     'dis_scheduler' : self.dis_scheduler.state_dict()
-        }, self.config['checkpoint_path'] + str(iter) + '.pt')
+        }, f'logs/checkpoints/checkpoint_n{iter}.pt')
         
     def load(self):
         checkpoint = torch.load(self.config['checkpoint_path'])
