@@ -11,34 +11,22 @@ from utils import get_indices
 from config.parser import parser
 from src.travelgan import TravelGan
 from logs.logger import Logger
-
+from utils import get_DataLoader_fromFolder
 
 parser = parser('config/config.ini')
 config = parser.to_dict()
 logger = Logger(config['logfile'], config['enable_wandb'])
 
-""" 
-    planes = 0
-    cars = 1
-    bird = 2
-    cat = 3										
-    deer = 4										
-    dog = 5									
-    frog = 6										
-    horse = 7 										
-    ship = 8 										
-    truck = 9
-"""
 
-#======= 
-# Cifar 10 
-#data = CIFAR10('data/', download=True, transform=transforms.Compose([transforms.ToTensor(),
-#                                                                     transforms.Normalize((0.5, 0.5, 0.5), (1., 1., 1.))]))
-#bird_idx = get_indices(data, 2)
-#plane_idx = get_indices(data, 0)
-#bird_loader = Data.DataLoader(data, batch_size=config['batch_size'], sampler = Data.sampler.SubsetRandomSampler(bird_idx))
-#plane_loader = Data.DataLoader(data, batch_size=config['batch_size'], sampler = Data.sampler.SubsetRandomSampler(plane_idx))
+
+
+
+source_path = '/gel/usr/maabi11/data/data/vangogh2photo/trainB'
+target_path = '/gel/usr/maabi11/data/data/vangogh2photo/trainA'
+
+pic_loader = get_DataLoader_fromFolder(source_path)
+monet_loader = get_DataLoader_fromFolder(target_path)
 
 model = TravelGan(config, logger)
 
-model.train(bird_loader, plane_loader)
+model.train(pic_loader, monet_loader)

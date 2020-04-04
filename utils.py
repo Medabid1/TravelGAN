@@ -1,8 +1,20 @@
 import torch.nn.init as init
 from torchvision import ImageFolder 
 
-
-
+def get_DataLoader_fromFolder(path, batch_size, transform=None):
+    
+    train_dataset = torchvision.datasets.ImageFolder(
+        root=path,
+        transform=torchvision.transforms.ToTensor()
+    )
+    train_loader = torch.utils.data.DataLoader(
+        train_dataset,
+        batch_size=64,
+        num_workers=0,
+        shuffle=True
+    )
+    return train_loader
+    
 def get_indices(dataset,class_name):
     indices =  []
     try : 
