@@ -24,5 +24,4 @@ pic_loader = get_DataLoader_fromFolder(source_path, config['batch_size'])
 monet_loader = get_DataLoader_fromFolder(target_path, config['batch_size'])
 
 model = TravelGan(config, logger)
-
 model.train(pic_loader, monet_loader)

@@ -8,14 +8,14 @@ from collections import OrderedDict
 from itertools import combinations
 
 class ResidualBlock(nn.Module):
-    def __init__(self, in_feat, num_feat, reduction=16, attention=True):
+    def __init__(self, in_feat, num_feat, reduction=16, attention=False):
         super().__init__()
         layers = []
         layers.append(nn.Conv2d(in_feat, num_feat, kernel_size=3, padding=1, bias=False))
-        layers.append(nn.InstanceNorm2d(num_feat, affine=True, track_running_stats=True))
+        layers.append(nn.BatchNorm2d(num_feat))
         layers.append(nn.ReLU(inplace=True))
         layers.append(nn.Conv2d(num_feat, in_feat, kernel_size=3, padding=1, bias=False))
-        layers.append(nn.InstanceNorm2d(in_feat, affine=True, track_running_stats=True))
+        layers.append(nn.BatchNorm2d(in_feat))
         self.main = nn.Sequential(*layers)
         self.is_attention = attention
         if attention :
@@ -42,7 +42,6 @@ class Generator(nn.Module):
 
         layers = []
         layers.append(nn.Conv2d(in_channels, num_feat, kernel_size=7, stride=1, padding=3, bias=False))
-        layers.append(nn.BatchNorm2d(num_feat))
         layers.append(nn.ReLU(inplace=True))
 
         curr_dim = num_feat
@@ -62,9 +61,12 @@ class Generator(nn.Module):
             layers.append(nn.BatchNorm2d(curr_dim//2))
             layers.append(nn.ReLU(inplace=True))
             curr_dim = curr_dim // 2
-
+        layers.append(nn.Conv2d(curr_dim, curr_dim, kernel_size=3, stride=1, padding=1, bias=False))
+        layers.append(nn.BatchNorm2d(curr_dim))
+        layers.append(nn.ReLU(inplace=True))
         layers.append(nn.Conv2d(curr_dim, in_channels, kernel_size=7, stride=1, padding=3, bias=False))
         layers.append(nn.Tanh())
+        
         self.main = nn.Sequential(*layers)
         self.apply(weights_init())
 
@@ -78,12 +80,12 @@ class Discriminator(nn.Module):
         super().__init__()
         layers = []
         layers.append(nn.Conv2d(in_channels, num_feat, kernel_size=4, stride=2, padding=1))
-        layers.append(nn.LeakyReLU(0.2, inplace=True))
+        layers.append(nn.LeakyReLU(0.02, inplace=True))
 
         curr_dim = num_feat
         for _ in range(1, num_repeat):
             layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1))
-            layers.append(nn.LeakyReLU(0.2, inplace=True))
+            layers.append(nn.LeakyReLU(0.02, inplace=True))
             curr_dim = curr_dim * 2
 
         self.main = nn.Sequential(*layers)
@@ -112,12 +114,12 @@ class SiameseNet(nn.Module):
         layers = []
         self.gamma = gamma 
         layers.append(nn.Conv2d(in_channels, num_feat, kernel_size=4, stride=2, padding=1))
-        layers.append(nn.LeakyReLU(0.2, inplace=True))
+        layers.append(nn.LeakyReLU(0.02, inplace=True))
 
         curr_dim = num_feat
         for _ in range(1, num_repeat):
             layers.append(nn.Conv2d(curr_dim, curr_dim*2, kernel_size=4, stride=2, padding=1))
-            layers.append(nn.LeakyReLU(0.2, inplace=True))
+            layers.append(nn.LeakyReLU(0.02, inplace=True))
             curr_dim = curr_dim * 2
 
         in_feat = image_size // 2**(num_repeat)

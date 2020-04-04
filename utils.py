@@ -2,13 +2,15 @@ import torch
 import torch.nn.init as init
 import torchvision
 from torchvision.datasets import ImageFolder 
+from torchvision.transforms import transforms
 
 def get_DataLoader_fromFolder(path, batch_size, transform=None):
     
     train_dataset = ImageFolder(
         root=path,
-        transform=torchvision.transforms.ToTensor()
-    )
+        transform= transforms.Compose([transforms.ToTensor(), 
+                                       transforms.Normalize((0.5, 0.5, 0.5),
+                                                            (0.5, 0.5, 0.5))]))
     train_loader = torch.utils.data.DataLoader(
         train_dataset,
         batch_size=batch_size,

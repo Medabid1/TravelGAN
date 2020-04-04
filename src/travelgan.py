@@ -8,7 +8,7 @@ from src.modules import Generator, Discriminator, SiameseNet
 from tqdm import tqdm
 
 
-wandb.init('TravelGan', name='noInstanceNorm')
+wandb.init('TravelGan', name='VanGogh')
 
 class TravelGan:
     def __init__(self, config, logger):
